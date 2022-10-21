@@ -22,15 +22,6 @@ function source.is_available()
   return false
 end
 
-local function get_operation_type(node, bufnr)
-  if node == nil then return nil end
-  if node:type() == 'operation_definition' then
-    return vim.treesitter.get_node_text(node:child(0), bufnr)
-  end
-
-  return get_operation_type(node:parent(), bufnr)
-end
-
 function source._get_schema(self)
   if self._schema ~= nil then return self._schema end
   
@@ -55,6 +46,11 @@ function source._get_field_path(self, node, bufnr, path)
     local op_type_name = vim.treesitter.get_node_text(node:child(0), bufnr)
     table.insert(path, 1, schema[op_type_name .. "Type"].name)
     return path
+  end
+
+  if node:type() == "fragment_definition" then
+    local frag_name = vim.treesitter.get_node_text(node:child(2):child(1), bufnr)
+    table.insert(path, 1, frag_name)
   end
 
   if node:type() == "field" then

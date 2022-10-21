@@ -6,4 +6,4 @@ require('cmp').setup({
   sources = { { name = 'gql' } },
 })
 
-vim.api.nvim_command [[ nmap <leader>x :messages<cr> ]]
+vim.api.nvim_command [[ nmap <leader>tt :messages<cr> ]]
