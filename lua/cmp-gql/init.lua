@@ -105,6 +105,18 @@ function source._get_fields(self, path)
   return type.fields or {}
 end
 
+local function if_else(p, a, b)
+  if p then return a else return b end
+end
+
+local function is_of_kind(kind, type)
+  if type == nil or type == vim.NIL then return false end
+  if type.kind == kind then
+    return true
+  end
+  return is_of_kind(kind, type.ofType)
+end
+
 ---@param params cmp.SourceCompletionApiParams
 ---@param callback fun(response: lsp.CompletionResponse|nil)
 function source.complete(self, params, callback)
@@ -116,10 +128,25 @@ function source.complete(self, params, callback)
     local fields = self:_get_fields(field_path)
 
     callback(vim.tbl_map(function(field)
+      local has_fields = is_of_kind("OBJECT", field.type)
+      local required_args = vim.tbl_filter(function(arg)
+        return is_of_kind("NON_NULL", arg.type)
+      end, field.args or {})
+      local has_required_args = vim.tbl_count(required_args) > 0
+
+      local arg_string = table.concat(
+        vim.tbl_map(
+          function(a) return a.name .. ": " end,
+          required_args
+        ),
+      ",")
+
       return {
         label = field.name,
         kind = cmp_lsp.CompletionItemKind.Field,
-        insertText = field.name,
+        insertText = field.name
+          .. if_else(has_required_args, "(" .. arg_string .. ")", "")
+          .. if_else(has_fields, " {}", ""),
         detail = "field",
         documentation = field.description,
       }
