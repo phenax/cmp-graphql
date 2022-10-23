@@ -48,6 +48,12 @@ function source._get_field_path(self, node, bufnr, path)
     return path
   end
 
+  if node:type() == "inline_fragment" then
+    local frag_name = vim.treesitter.get_node_text(node:child(1):child(1), bufnr)
+    table.insert(path, 1, frag_name)
+    return path
+  end
+
   if node:type() == "fragment_definition" then
     local frag_name = vim.treesitter.get_node_text(node:child(2):child(1), bufnr)
     table.insert(path, 1, frag_name)
