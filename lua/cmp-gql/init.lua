@@ -101,6 +101,7 @@ function source._get_fields(self, path)
     if type == nil then return {} end
   end
 
+  if type.fields == vim.NIL then return {} end
   return type.fields or {}
 end
 
@@ -122,7 +123,7 @@ function source.complete(self, params, callback)
         detail = "field",
         documentation = field.description,
       }
-    end, fields ))
+    end, fields))
   end, 0)
 end
 
