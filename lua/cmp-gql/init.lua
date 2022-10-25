@@ -16,7 +16,8 @@ function source.is_available()
 
   local parent = node:parent()
   while parent ~= nil do
-    if parent:type() == "document" then return true end
+    -- 63 == graphql's document node
+    if parent:symbol() == 63 then return true end
     parent = parent:parent()
   end
   return false
