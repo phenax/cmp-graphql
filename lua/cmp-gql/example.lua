@@ -1,9 +1,10 @@
-local cmp_gql = require('cmp-gql')
-
-require('cmp').register_source('gql', cmp_gql.new())
-
 require('cmp').setup({
   sources = { { name = 'gql' } },
+})
+
+require('cmp-gql').setup({
+  schema_path = 'graphql.schema.json',
+  path = { '*.js', '*.ts', '*.gql' }, 
 })
 
 vim.api.nvim_command [[ nmap <leader>tt :messages<cr> ]]
