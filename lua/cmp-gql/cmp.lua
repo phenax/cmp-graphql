@@ -5,7 +5,7 @@ local source = {}
 
 function source.new(config)
   local self = setmetatable({}, { __index = source })
-  self._path_patterns = config.path
+  self._path_patterns = config.path or {}
   self._schema_path = config.schema_path
   self._schema = nil
   return self
@@ -16,7 +16,16 @@ function source.is_available(self)
   local node = util.get_ts_node_under_cursor()
   if node == nil then return false end
 
-  -- TODO: Use self._path_patterns
+  local function matches_path()
+    local path = vim.fn.expand('%')
+    for _, pat in pairs(self._path_patterns) do
+      if string.match(path, pat) ~= nil then return true end
+    end
+    return false
+  end
+
+  -- Check file pattern
+  if not matches_path() then return false end
 
   local parent = node:parent()
   while parent ~= nil do
@@ -72,7 +81,7 @@ function source._get_field_path(self, node, bufnr, path)
   return self:_get_field_path(node:parent(), bufnr, path)
 end
 
-function source._get_fields(self, path)
+function source._get_field(self, path, collapse_type)
   local schema = self:_get_schema()
   local type = schema
 
@@ -80,20 +89,25 @@ function source._get_fields(self, path)
     local fields = type.fields or type.types or {}
 
     local field = util.find_in_table(fields, function(t) return t.name == key end)
-    if field == nil then return {} end
+    if field == nil then return nil end
 
-    if field.type ~= nil then
+    if collapse_type and field.type ~= nil then
       local ty_name = util.collapse_type(field.type)
       type = util.find_in_table(schema.types, function(t) return t.name == ty_name end)
     else
       type = field
     end
 
-    if type == nil then return {} end
+    if type == nil then return nil end
   end
 
-  if type.fields == vim.NIL then return {} end
-  return type.fields or {}
+  return type
+end
+function source._get_fieldset(self, path)
+  local field = self:_get_field(path, true)
+  if field == nil then return {} end
+  if field.fields == vim.NIL then return {} end
+  return field.fields or field.types or {}
 end
 
 ---@param params cmp.SourceCompletionApiParams
@@ -112,9 +126,9 @@ function source.complete(self, params, callback)
 
     if node:type() == "selection_set" then
       local field_path = self:_get_field_path(node, bufnr)
-      local fields = self:_get_fields(field_path)
+      local fields = self:_get_fieldset(field_path)
 
-      callback(vim.tbl_map(function(field)
+      return callback(vim.tbl_map(function(field)
         local has_fields = util.is_of_kind("OBJECT", field.type)
         local required_args = vim.tbl_filter(function(arg)
           return util.is_of_kind("NON_NULL", arg.type)
@@ -142,19 +156,37 @@ function source.complete(self, params, callback)
     elseif is_type_cmp(node) then
       local schema = self:_get_schema()
       local fields = schema.types
-      callback(vim.tbl_map(function(field)
+      return callback(vim.tbl_map(function(field)
         return {
           label = field.name,
-          kind = cmp_lsp.CompletionItemKind.Field,
+          kind = cmp_lsp.CompletionItemKind.Class,
           insertText = field.name,
           detail = "field",
           documentation = field.description,
         }
       end, fields))
-    else
-      print(node:type())
-      callback({})
+
+    elseif node:type() == "argument" then
+      local field_path = self:_get_field_path(node, bufnr)
+      local field = self:_get_field(field_path, false)
+      if field ~= nil then
+        return callback(vim.tbl_map(function(arg)
+          print(vim.inspect(arg))
+          return {
+            label = arg.name,
+            kind = cmp_lsp.CompletionItemKind.Property,
+            insertText = arg.name,
+            detail = "field",
+            documentation = arg.description,
+          }
+        end, field.args))
+      end
     end
+
+    -- TODO: Add object_field completion
+
+    print(node:type())
+    return callback({})
   end, 0)
 end
 

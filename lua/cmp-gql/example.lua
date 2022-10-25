@@ -4,7 +4,7 @@ require('cmp').setup({
 
 require('cmp-gql').setup({
   schema_path = 'graphql.schema.json',
-  path = { '*.js', '*.ts', '*.gql' }, 
+  path = { '[.]js$', '[.]ts$', '[.]gql$' }, 
 })
 
 vim.api.nvim_command [[ nmap <leader>tt :messages<cr> ]]
