@@ -68,20 +68,6 @@ function source._get_field_path(self, node, bufnr, path)
   return self:_get_field_path(node:parent(), bufnr, path)
 end
 
-local function find_in_table(table, fn)
-  for _, item in pairs(table) do
-    if fn(item) then return item end
-  end
-
-  return nil
-end
-
-local function collapse_type(type)
-  if type == nil then return nil end
-  if type.ofType == vim.NIL then return type.name end
-  return collapse_type(type.ofType)
-end
-
 function source._get_fields(self, path)
   local schema = self:_get_schema()
   local type = schema
@@ -89,12 +75,12 @@ function source._get_fields(self, path)
   for _, key in pairs(path) do
     local fields = type.fields or type.types or {}
 
-    local field = find_in_table(fields, function(t) return t.name == key end)
+    local field = util.find_in_table(fields, function(t) return t.name == key end)
     if field == nil then return {} end
 
     if field.type ~= nil then
-      local ty_name = collapse_type(field.type)
-      type = find_in_table(schema.types, function(t) return t.name == ty_name end)
+      local ty_name = util.collapse_type(field.type)
+      type = util.find_in_table(schema.types, function(t) return t.name == ty_name end)
     else
       type = field
     end
@@ -104,18 +90,6 @@ function source._get_fields(self, path)
 
   if type.fields == vim.NIL then return {} end
   return type.fields or {}
-end
-
-local function if_else(p, a, b)
-  if p then return a else return b end
-end
-
-local function is_of_kind(kind, type)
-  if type == nil or type == vim.NIL then return false end
-  if type.kind == kind then
-    return true
-  end
-  return is_of_kind(kind, type.ofType)
 end
 
 ---@param params cmp.SourceCompletionApiParams
@@ -129,9 +103,9 @@ function source.complete(self, params, callback)
     local fields = self:_get_fields(field_path)
 
     callback(vim.tbl_map(function(field)
-      local has_fields = is_of_kind("OBJECT", field.type)
+      local has_fields = util.is_of_kind("OBJECT", field.type)
       local required_args = vim.tbl_filter(function(arg)
-        return is_of_kind("NON_NULL", arg.type)
+        return util.is_of_kind("NON_NULL", arg.type)
       end, field.args or {})
       local has_required_args = vim.tbl_count(required_args) > 0
 
@@ -146,8 +120,8 @@ function source.complete(self, params, callback)
         label = field.name,
         kind = cmp_lsp.CompletionItemKind.Field,
         insertText = field.name
-          .. if_else(has_required_args, "(" .. arg_string .. ")", "")
-          .. if_else(has_fields, " {}", ""),
+          .. util.if_else(has_required_args, "(" .. arg_string .. ")", "")
+          .. util.if_else(has_fields, " {}", ""),
         detail = "field",
         documentation = field.description,
       }
