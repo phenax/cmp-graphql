@@ -103,33 +103,58 @@ function source.complete(self, params, callback)
     local bufnr = vim.fn.bufnr('%')
     local node = util.get_ts_node_under_cursor()
 
-    local field_path = self:_get_field_path(node, bufnr)
-    local fields = self:_get_fields(field_path)
+    local function is_type_cmp(n)
+      if n == nil then return false end
+      if n:type() == "variable_definitions" then return true end
+      if n:type() == "inline_fragment" then return true end
+      return is_type_cmp(n:parent())
+    end
 
-    callback(vim.tbl_map(function(field)
-      local has_fields = util.is_of_kind("OBJECT", field.type)
-      local required_args = vim.tbl_filter(function(arg)
-        return util.is_of_kind("NON_NULL", arg.type)
-      end, field.args or {})
-      local has_required_args = vim.tbl_count(required_args) > 0
+    if node:type() == "selection_set" then
+      local field_path = self:_get_field_path(node, bufnr)
+      local fields = self:_get_fields(field_path)
 
-      local arg_string = table.concat(
-        vim.tbl_map(
-          function(a) return a.name .. ": " end,
-          required_args
-        ),
-      ",")
+      callback(vim.tbl_map(function(field)
+        local has_fields = util.is_of_kind("OBJECT", field.type)
+        local required_args = vim.tbl_filter(function(arg)
+          return util.is_of_kind("NON_NULL", arg.type)
+        end, field.args or {})
+        local has_required_args = vim.tbl_count(required_args) > 0
 
-      return {
-        label = field.name,
-        kind = cmp_lsp.CompletionItemKind.Field,
-        insertText = field.name
-          .. util.if_else(has_required_args, "(" .. arg_string .. ")", "")
-          .. util.if_else(has_fields, " {}", ""),
-        detail = "field",
-        documentation = field.description,
-      }
-    end, fields))
+        local arg_string = table.concat(
+          vim.tbl_map(
+            function(a) return a.name .. ": " end,
+            required_args
+          ),
+        ",")
+
+        return {
+          label = field.name,
+          kind = cmp_lsp.CompletionItemKind.Field,
+          insertText = field.name
+            .. util.if_else(has_required_args, "(" .. arg_string .. ")", "")
+            .. util.if_else(has_fields, " {}", ""),
+          detail = "field",
+          documentation = field.description,
+        }
+      end, fields))
+
+    elseif is_type_cmp(node) then
+      local schema = self:_get_schema()
+      local fields = schema.types
+      callback(vim.tbl_map(function(field)
+        return {
+          label = field.name,
+          kind = cmp_lsp.CompletionItemKind.Field,
+          insertText = field.name,
+          detail = "field",
+          documentation = field.description,
+        }
+      end, fields))
+    else
+      print(node:type())
+      callback({})
+    end
   end, 0)
 end
 
