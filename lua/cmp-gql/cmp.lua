@@ -140,7 +140,7 @@ function source.complete(self, params, callback)
             function(a) return a.name .. ": " end,
             required_args
           ),
-        ",")
+        ", ")
 
         return {
           label = field.name,
@@ -166,7 +166,7 @@ function source.complete(self, params, callback)
         }
       end, fields))
 
-    elseif node:type() == "argument" then
+    elseif node:type() == "argument" or node:type() == "arguments" then
       local field_path = self:_get_field_path(node, bufnr)
       local field = self:_get_field(field_path, false)
       if field ~= nil then
