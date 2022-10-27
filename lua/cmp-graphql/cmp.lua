@@ -1,5 +1,5 @@
 local cmp_lsp = require('cmp.types.lsp')
-local util = require('cmp-gql.util')
+local util = require('cmp-graphql.util')
 
 local source = {}
 

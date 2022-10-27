@@ -13,7 +13,7 @@ use 'phenax/cmp-graphql'
 
 * Setup cmp for your project with
 ```lua
-require('cmp-gql').setup({
+require('cmp-graphql').setup({
   schema_path = 'graphql.schema.json',
   path = { '[.]js$', '[.]ts$', '[.]gql$' }, 
 })

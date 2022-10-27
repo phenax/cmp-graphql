@@ -1,8 +1,8 @@
 require('cmp').setup({
-  sources = { { name = 'gql' } },
+  sources = { { name = 'graphql' } },
 })
 
-require('cmp-gql').setup({
+require('cmp-graphql').setup({
   schema_path = 'graphql.schema.json',
   path = { '[.]js$', '[.]ts$', '[.]gql$' }, 
 })
