@@ -129,7 +129,13 @@ function source.complete(self, params, callback)
       local fields = self:_get_fieldset(field_path)
 
       return callback(vim.tbl_map(function(field)
-        local has_fields = util.is_of_kind("OBJECT", field.type)
+        local enum_type_name = util.collapse_type(field.type)
+        local enum_type = self:_get_field({ enum_type_name }, false)
+        local is_enum = enum_type and enum_type.possibleTypes ~= vim.NIL
+
+        local has_fields =
+          util.is_of_kind("OBJECT", field.type) or is_enum
+
         local required_args = vim.tbl_filter(function(arg)
           return util.is_of_kind("NON_NULL", arg.type)
         end, field.args or {})
@@ -171,7 +177,7 @@ function source.complete(self, params, callback)
       local field = self:_get_field(field_path, false)
       if field ~= nil then
         return callback(vim.tbl_map(function(arg)
-          print(vim.inspect(arg))
+          -- print(vim.inspect(arg))
           return {
             label = arg.name,
             kind = cmp_lsp.CompletionItemKind.Property,
