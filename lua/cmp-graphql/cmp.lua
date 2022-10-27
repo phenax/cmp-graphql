@@ -57,24 +57,36 @@ function source._get_field_path(self, node, bufnr, path)
 
   if node:type() == "operation_definition" then
     local schema = self:_get_schema()
-    local op_type_name = vim.treesitter.get_node_text(node:child(0), bufnr)
+    local op_type_name = util.get_text_capture(
+      bufnr,
+      node,
+      "(operation_definition (operation_type) @graphql_node_name)"
+    )
     table.insert(path, 1, schema[op_type_name .. "Type"].name)
     return path
   end
 
   if node:type() == "inline_fragment" then
-    local frag_name = vim.treesitter.get_node_text(node:child(1):child(1), bufnr)
+    local frag_name = util.get_text_capture(
+      bufnr,
+      node,
+      "(inline_fragment (type_condition (named_type (name) @graphql_node_name)))"
+    )
     table.insert(path, 1, frag_name)
     return path
   end
 
   if node:type() == "fragment_definition" then
-    local frag_name = vim.treesitter.get_node_text(node:child(2):child(1), bufnr)
+    local frag_name = util.get_text_capture(
+      bufnr,
+      node,
+      "(fragment_definition (type_condition (named_type (name) @graphql_node_name)))"
+    )
     table.insert(path, 1, frag_name)
   end
 
   if node:type() == "field" then
-    local field_name = vim.treesitter.get_node_text(node:child(0), bufnr)
+    local field_name = util.get_text_capture(bufnr, node, "(field (name) @graphql_node_name)")
     table.insert(path, 1, field_name)
   end
 
