@@ -38,4 +38,23 @@ function util.is_of_kind(kind, type)
   return util.is_of_kind(kind, type.ofType)
 end
 
+function util.get_text_capture(bfnr, n, query_str)
+  local query = vim.treesitter.parse_query("graphql", query_str)
+  local get_node = query:iter_captures(n, bfnr, 0, -1)
+  local _, name_node = get_node()
+  return vim.treesitter.get_node_text(name_node, bfnr)
+end
+
+function util.cons(tbl)
+  if #tbl == 0 then return nil, {} end
+
+  local tl = {}
+  for i, x in pairs(tbl) do
+    if i > 1 then
+      table.insert(tl, x)
+    end
+  end
+  return tbl[1], tl
+end
+
 return util

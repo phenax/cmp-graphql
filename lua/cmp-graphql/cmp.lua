@@ -115,6 +115,7 @@ function source._get_field(self, path, collapse_type)
 
   return type
 end
+
 function source._get_fieldset(self, path)
   local field = self:_get_field(path, true)
   if field == nil then return {} end
@@ -187,9 +188,9 @@ function source.complete(self, params, callback)
     elseif node:type() == "argument" or node:type() == "arguments" then
       local field_path = self:_get_field_path(node, bufnr)
       local field = self:_get_field(field_path, false)
+
       if field ~= nil then
         return callback(vim.tbl_map(function(arg)
-          -- print(vim.inspect(arg))
           return {
             label = arg.name,
             kind = cmp_lsp.CompletionItemKind.Property,
@@ -199,6 +200,45 @@ function source.complete(self, params, callback)
           }
         end, field.args))
       end
+
+    elseif node:type() == "object_value" or node:type() == "object_field" then
+      local field_path = self:_get_field_path(node, bufnr)
+      local field = self:_get_field(field_path, false)
+
+      if field ~= nil then
+        local args_path = self:_get_args_path(node, bufnr)
+        local arg_name, fields = util.cons(args_path)
+
+        local arg = util.find_in_table(field.args or {}, function(a)
+          return a.name == arg_name
+        end)
+
+        if arg ~= nil then
+          table.insert(fields, 1, util.collapse_type(arg.type))
+          local object_field = self:_get_field(fields, true)
+          if object_field ~= nil then
+            local object_fields = util.if_else(
+              object_field.fields ~= vim.NIL,
+              object_field.fields,
+              {}
+            )
+
+            if field ~= nil then
+              return callback(vim.tbl_map(function(f)
+                return {
+                  label = f.name,
+                  kind = cmp_lsp.CompletionItemKind.Property,
+                  insertText = f.name,
+                  detail = "field",
+                  documentation = f.description,
+                }
+              end, object_fields))
+            end
+          end
+        end
+
+        return
+      end
     end
 
     -- TODO: Add object_field completion
@@ -206,6 +246,20 @@ function source.complete(self, params, callback)
     print(node:type())
     return callback({})
   end, 0)
+end
+
+function source._get_args_path(self, node, bufnr, path)
+  path = path or {}
+  if node == nil then return path end
+
+  if node:type() == "argument" or node:type() == "object_field" then
+    local name = vim.treesitter.get_node_text(node:child(0), bufnr)
+    table.insert(path, 1, name)
+  end
+
+  if node:type() == "argument" then return path end
+
+  return self:_get_args_path(node:parent(), bufnr, path)
 end
 
 return source
