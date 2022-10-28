@@ -134,6 +134,7 @@ function source.complete(self, params, callback)
       if n == nil then return false end
       if n:type() == "variable_definitions" then return true end
       if n:type() == "inline_fragment" then return true end
+      if n:type() == "fragment_definition" then return true end
       return is_type_cmp(n:parent())
     end
 
@@ -167,7 +168,7 @@ function source.complete(self, params, callback)
           insertText = field.name
             .. util.if_else(has_required_args, "(" .. arg_string .. ")", "")
             .. util.if_else(has_fields, " {}", ""),
-          detail = "field",
+          detail = "field :: " .. util.collapse_type(field.type),
           documentation = field.description,
         }
       end, fields))
@@ -180,7 +181,7 @@ function source.complete(self, params, callback)
           label = field.name,
           kind = cmp_lsp.CompletionItemKind.Class,
           insertText = field.name,
-          detail = "field",
+          detail = field.kind,
           documentation = field.description,
         }
       end, fields))
@@ -195,7 +196,7 @@ function source.complete(self, params, callback)
             label = arg.name,
             kind = cmp_lsp.CompletionItemKind.Property,
             insertText = arg.name,
-            detail = "field",
+            detail = "argument :: " .. util.collapse_type(arg.type),
             documentation = arg.description,
           }
         end, field.args))
@@ -228,8 +229,8 @@ function source.complete(self, params, callback)
                 return {
                   label = f.name,
                   kind = cmp_lsp.CompletionItemKind.Property,
-                  insertText = f.name,
-                  detail = "field",
+                  insertText = f.name .. ": ",
+                  detail = "object field :: " .. util.collapse_type(f.type),
                   documentation = f.description,
                 }
               end, object_fields))
