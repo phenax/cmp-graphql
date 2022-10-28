@@ -1,9 +1,9 @@
-# cmp-graphql
+# cmp-graphql [WIP]
 
 Neovim nvim-cmp source for graphql completions based on schema
 
 
-### Instructions
+### Instructions [WIP]
 
 * Install `phenax/cmp-graphql` using your plugin manager
 Example -
@@ -11,7 +11,17 @@ Example -
 use 'phenax/cmp-graphql'
 ```
 
-* Setup cmp for your project with
+* Add graphql source to your cmp config
+```lua
+cmp.setup({
+  sources = {
+    // ...
+    { name = 'graphql' }
+  }
+})
+```
+
+* Setup cmp-graphql for your project with
 ```lua
 require('cmp-graphql').setup({
   schema_path = 'graphql.schema.json',
