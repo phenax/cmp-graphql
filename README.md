@@ -1,9 +1,9 @@
-# cmp-graphql [WIP]
+# cmp-graphql
 
 Neovim nvim-cmp source for graphql completions based on schema
 
 
-## Instructions [WIP]
+## Instructions
 
 ### Install `phenax/cmp-graphql` using your plugin manager
 Example -

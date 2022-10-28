@@ -168,7 +168,7 @@ function source.complete(self, params, callback)
           insertText = field.name
             .. util.if_else(has_required_args, "(" .. arg_string .. ")", "")
             .. util.if_else(has_fields, " {}", ""),
-          detail = "field :: " .. util.collapse_type(field.type),
+          detail = "@field :: " .. util.collapse_type(field.type),
           documentation = field.description,
         }
       end, fields))
@@ -181,7 +181,7 @@ function source.complete(self, params, callback)
           label = field.name,
           kind = cmp_lsp.CompletionItemKind.Class,
           insertText = field.name,
-          detail = field.kind,
+          detail = "@type :: " .. field.kind,
           documentation = field.description,
         }
       end, fields))
@@ -196,7 +196,7 @@ function source.complete(self, params, callback)
             label = arg.name,
             kind = cmp_lsp.CompletionItemKind.Property,
             insertText = arg.name,
-            detail = "argument :: " .. util.collapse_type(arg.type),
+            detail = "@argument :: " .. util.collapse_type(arg.type),
             documentation = arg.description,
           }
         end, field.args))
@@ -230,7 +230,7 @@ function source.complete(self, params, callback)
                   label = f.name,
                   kind = cmp_lsp.CompletionItemKind.Property,
                   insertText = f.name .. ": ",
-                  detail = "object field :: " .. util.collapse_type(f.type),
+                  detail = "@property :: " .. util.collapse_type(f.type),
                   documentation = f.description,
                 }
               end, object_fields))
