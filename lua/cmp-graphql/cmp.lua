@@ -5,7 +5,7 @@ local source = {}
 
 function source.new(config)
   local self = setmetatable({}, { __index = source })
-  self._path_patterns = config.path or { '[.]js$', '[.]ts$', '[.]gql$' }
+  self._path_patterns = config.path or { '[.]jsx?$', '[.]tsx?$', '[.]gql$' }
   self._schema_path = config.schema_path
   self._schema = nil
   return self
